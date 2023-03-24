@@ -1,0 +1,20 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+    <h1>Book page</h1>
+
+    {% if book %}
+    <ul>
+
+      <li>
+        <a>Title: {{ book.title }}</a><br>
+        <a>Description: {{ book.description }}</a><br>
+        <a>Year: {{ book.year }}</a><br>
+        <a>Volume: {{ book.volume }}</a><br>
+      </li>
+    </ul>
+
+    {% else %}
+      <p>Book not found..</p>
+    {% endif %}
+{% endblock %}
