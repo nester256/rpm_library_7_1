@@ -14,7 +14,7 @@ class NewestBookListFilter(admin.SimpleListFilter):
             ('20yo', 'Written in the last 20 years'),
         )
 
-    def queryset(self, request, queryset):
+    def queryset(self, _, queryset):
         if self.value() == '10yo':
             return queryset.filter(
                 year__gte = datetime.now().year - 10
@@ -49,13 +49,9 @@ class BookAdmin(admin.ModelAdmin):
     model = Book
     inlines = (BookAuthor_inline, BookGenre_inline)
     list_filter = (
-        'title',
-        'year',
-        'volume',
         'type',
-        'created',
         'genres',
-        NewestBookListFilter
+        NewestBookListFilter,
     )
 
 @admin.register(Author)
