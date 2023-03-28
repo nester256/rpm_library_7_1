@@ -3,6 +3,8 @@ from .models import Book, Genre, Author
 from django.views.generic import ListView
 from django.core.paginator import Paginator
 from os.path import join
+from rest_framework.viewsets import ModelViewSet
+from .serializers import BookSerializer, AuthorSerializer, GenreSerializer
 
 
 TEMPLATE_MAIN = 'index.html'
@@ -67,3 +69,15 @@ author_view = entity_view(Author, 'author', AUTHOR_ENTITY)
 
 GenreListView = catalog_view(Genre, 'genres', GENRES_CATALOG)
 genre_view = entity_view(Genre, 'genre', GENRE_ENTITY)
+
+class BookViewSet(ModelViewSet):
+   serializer_class = BookSerializer
+   queryset = Book.objects.all().order_by('title')
+
+class AuthorViewSet(ModelViewSet):
+   serializer_class = AuthorSerializer
+   queryset = Author.objects.all().order_by('full_name')
+
+class GenreViewSet(ModelViewSet):
+   serializer_class = GenreSerializer
+   queryset = Genre.objects.all().order_by('name')
