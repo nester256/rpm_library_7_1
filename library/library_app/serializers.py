@@ -3,13 +3,19 @@ from rest_framework.serializers import HyperlinkedModelSerializer
 
 
 class BookSerializer(HyperlinkedModelSerializer):
-    model = Book
-    fields = ('title', 'description', 'type', 'volume', 'year', 'created', 'modified')
+        
+    class Meta:
+        model = Book
+        fields = ('title', 'description', 'type', 'volume', 'year', 'created', 'modified')
 
 class AuthorSerializer(HyperlinkedModelSerializer):
-    model = Author
-    fields = ('full_name',) # tuple
+        
+    class Meta:
+        model = Author
+        fields = ('full_name',)
 
 class GenreSerializer(HyperlinkedModelSerializer):
-    model = Genre
-    fields = ('name', 'description')
+    
+    class Meta:
+        model = Genre
+        fields = ('name', 'description')
