@@ -2,6 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from uuid import uuid4
 from django.utils.translation import gettext_lazy as _
+from datetime import datetime
 
 
 class UUIDMixin(models.Model):
@@ -11,13 +12,13 @@ class UUIDMixin(models.Model):
         abstract = True
 
 class CreatedMixin(models.Model):
-    created = models.DateTimeField(_('created'), blank=True, null=True)
+    created = models.DateTimeField(_('created'), default=datetime.now, blank=True, null=False)
 
     class Meta:
         abstract = True
 
 class ModifiedMixin(models.Model):
-    modified = models.DateTimeField(_('modified'), blank=True, null=True)
+    modified = models.DateTimeField(_('modified'), default=datetime.now, blank=True, null=False)
 
     class Meta:
         abstract = True

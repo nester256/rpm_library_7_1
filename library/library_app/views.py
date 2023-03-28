@@ -70,14 +70,24 @@ author_view = entity_view(Author, 'author', AUTHOR_ENTITY)
 GenreListView = catalog_view(Genre, 'genres', GENRES_CATALOG)
 genre_view = entity_view(Genre, 'genre', GENRE_ENTITY)
 
-class BookViewSet(ModelViewSet):
-   serializer_class = BookSerializer
-   queryset = Book.objects.all().order_by('title')
 
-class AuthorViewSet(ModelViewSet):
-   serializer_class = AuthorSerializer
-   queryset = Author.objects.all().order_by('full_name')
+def create_viewset(cls_model, serializer, order_field):
+    class CustomViewSet(ModelViewSet):
+        serializer_class = serializer
+        queryset = cls_model.objects.all().order_by(order_field)
 
-class GenreViewSet(ModelViewSet):
-   serializer_class = GenreSerializer
-   queryset = Genre.objects.all().order_by('name')
+        def get_queryset(self):
+                query = {}
+                for param in serializer.Meta.fields:
+                    value = self.request.GET.get(param, '')
+                    if value:
+                        query[param] = value
+                    
+                objects = cls_model.objects.all().filter(**query) if id else cls_model.objects.all()
+                return objects.order_by(order_field)
+
+    return CustomViewSet
+
+BookViewSet = create_viewset(Book, BookSerializer, 'title')
+AuthorViewSet = create_viewset(Author, AuthorSerializer, 'full_name')
+GenreViewSet = create_viewset(Genre, GenreSerializer, 'name')
