@@ -5,6 +5,8 @@ from django.core.paginator import Paginator
 from os.path import join
 from rest_framework.viewsets import ModelViewSet
 from .serializers import BookSerializer, AuthorSerializer, GenreSerializer
+from rest_framework.permissions import IsAdminUser, IsAuthenticated, BasePermission
+
 
 
 TEMPLATE_MAIN = 'index.html'
@@ -70,6 +72,10 @@ author_view = entity_view(Author, 'author', AUTHOR_ENTITY)
 GenreListView = catalog_view(Genre, 'genres', GENRES_CATALOG)
 genre_view = entity_view(Genre, 'genre', GENRE_ENTITY)
 
+class Auth(BasePermission):
+    def has_permission(self, request, view):
+        print(f'REQUEST METHOD {request.method}')
+        return request.method in ['GET', 'POST', 'DELETE']
 
 def create_viewset(cls_model, serializer, order_field):
     class CustomViewSet(ModelViewSet):
@@ -77,14 +83,18 @@ def create_viewset(cls_model, serializer, order_field):
         queryset = cls_model.objects.all().order_by(order_field)
 
         def get_queryset(self):
-                query = {}
-                for param in serializer.Meta.fields:
-                    value = self.request.GET.get(param, '')
-                    if value:
-                        query[param] = value
-                    
-                objects = cls_model.objects.all().filter(**query) if id else cls_model.objects.all()
-                return objects.order_by(order_field)
+            objects = cls_model.objects.all()
+            query = {}
+            for param in serializer.Meta.fields:
+                value = self.request.GET.get(param, '')
+                if value:
+                    query[param] = value
+            if query:
+                objects = objects.filter(**query)
+            return objects.order_by(order_field)
+        
+        # def get_permissions(self):
+        #     return [IsAuthenticated]
 
     return CustomViewSet
 
