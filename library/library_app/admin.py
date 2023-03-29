@@ -1,6 +1,9 @@
 from django.contrib import admin
 from datetime import datetime
-from .models import Genre, Book, Author, BookAuthor, BookGenre, genre_choices
+from .models import Genre, Book, Author, BookAuthor, BookGenre
+
+
+DECADE = 10
 
 
 class NewestBookListFilter(admin.SimpleListFilter):
@@ -16,22 +19,21 @@ class NewestBookListFilter(admin.SimpleListFilter):
 
     def queryset(self, _, queryset):
         if self.value() == '10yo':
-            return queryset.filter(
-                year__gte = datetime.now().year - 10
-            )
+            return queryset.filter(year__gte=datetime.now().year - DECADE)
         elif self.value() == '20yo':
-            return queryset.filter(
-                year__gte = datetime.now().year - 20
-            )
+            return queryset.filter(year__gte=datetime.now().year - DECADE * 2)
         return queryset
 
-class BookAuthor_inline(admin.TabularInline):
+
+class BookAuthorInline(admin.TabularInline):
     model = BookAuthor
     extra = 1
 
-class BookGenre_inline(admin.TabularInline):
+
+class BookGenreInline(admin.TabularInline):
     model = BookGenre
     extra = 1
+
 
 @admin.register(Genre)
 class GenreAdmin(admin.ModelAdmin):
@@ -42,24 +44,26 @@ class GenreAdmin(admin.ModelAdmin):
         'name',
     )
 
+
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
     """Register Book Admin Model."""
 
     model = Book
-    inlines = (BookAuthor_inline, BookGenre_inline)
+    inlines = (BookAuthorInline, BookGenreInline)
     list_filter = (
         'type',
         'genres',
         NewestBookListFilter,
     )
 
+
 @admin.register(Author)
 class AuthorAdmin(admin.ModelAdmin):
     """Register Author Admin Model."""
-    
+
     model = Author
-    inlines = (BookAuthor_inline,)
+    inlines = (BookAuthorInline,)
     list_filter = (
         'full_name',
     )

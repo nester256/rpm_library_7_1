@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from uuid import uuid4
 from django.utils.translation import gettext_lazy as _
 from datetime import datetime
+from . import config
 
 
 class UUIDMixin(models.Model):
@@ -11,11 +12,13 @@ class UUIDMixin(models.Model):
     class Meta:
         abstract = True
 
+
 class CreatedMixin(models.Model):
     created = models.DateTimeField(_('created'), default=datetime.now, blank=True, null=False)
 
     class Meta:
         abstract = True
+
 
 class ModifiedMixin(models.Model):
     modified = models.DateTimeField(_('modified'), default=datetime.now, blank=True, null=False)
@@ -30,12 +33,12 @@ class Author(UUIDMixin, CreatedMixin, ModifiedMixin):
 
     def __str__(self):
         return self.full_name
-    
+
     class Meta:
         db_table = '"library"."author"'
         verbose_name = _('author')
         verbose_name_plural = _('authors')
-        
+
 
 def validate_volume(volume: int):
     if volume <= 0:
@@ -44,17 +47,19 @@ def validate_volume(volume: int):
             params={'volume': volume}
         )
 
+
 # types of goods
 type_choices = (
     ('book', _('book')),
     ('magazine', _('magazine'))
 )
 
+
 class Book(UUIDMixin, CreatedMixin, ModifiedMixin):
-    title = models.CharField(_('title'), max_length=40)
+    title = models.CharField(_('title'), max_length=config.CHARS_DEFAULT)
     description = models.TextField(_('description'), blank=True, null=True)
     volume = models.IntegerField(_('volume'), validators=[validate_volume])
-    type = models.CharField(_('type'), max_length=20, choices=type_choices, blank=True, null=True)
+    type = models.CharField(_('type'), max_length=config.CHARS_DEFAULT, choices=type_choices, blank=True, null=True)
     year = models.IntegerField(_('year'), blank=True, null=True)
     authors = models.ManyToManyField(Author, verbose_name=_('authors'), through='BookAuthor')
     genres = models.ManyToManyField('Genre', verbose_name=_('genres'), through='BookGenre')
@@ -83,8 +88,9 @@ genre_choices = (
     ('detective', _('detective'))
 )
 
+
 class Genre(UUIDMixin, CreatedMixin, ModifiedMixin):
-    name = models.CharField(_('name'), choices=genre_choices, max_length=30)
+    name = models.CharField(_('name'), choices=genre_choices, max_length=config.CHARS_DEFAULT)
     description = models.TextField(_('description'), blank=True, null=True)
     books = models.ManyToManyField(Book, verbose_name=_('books'), through='BookGenre')
 
@@ -104,6 +110,3 @@ class BookGenre(UUIDMixin, CreatedMixin):
     class Meta:
         db_table = '"library"."book_genre"'
         unique_together = (('book', 'genre'),)
-
-
-

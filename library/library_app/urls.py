@@ -1,4 +1,4 @@
-"""library_app URL Configuration"""
+"""library_app URL Configuration."""
 from django.urls import path, include
 from rest_framework import routers
 from . import views
