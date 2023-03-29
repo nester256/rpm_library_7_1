@@ -32,7 +32,7 @@ class Author(UUIDMixin, CreatedMixin, ModifiedMixin):
         return self.full_name
     
     class Meta:
-        db_table = 'author'
+        db_table = '"library"."author"'
         verbose_name = _('author')
         verbose_name_plural = _('authors')
         
@@ -63,7 +63,7 @@ class Book(UUIDMixin, CreatedMixin, ModifiedMixin):
         return f'{self.title}, {self.type}, {self.year}.'
 
     class Meta:
-        db_table = 'book'
+        db_table = '"library"."book"'
         verbose_name = _('book')
         verbose_name_plural = _('books')
 
@@ -73,7 +73,7 @@ class BookAuthor(UUIDMixin, CreatedMixin):
     author = models.ForeignKey(Author, on_delete=models.CASCADE, blank=True, null=True)
 
     class Meta:
-        db_table = 'book_author'
+        db_table = '"library"."book_author"'
         unique_together = (('book', 'author'),)
 
 
@@ -92,7 +92,7 @@ class Genre(UUIDMixin, CreatedMixin, ModifiedMixin):
         return self.name
 
     class Meta:
-        db_table = 'genre'
+        db_table = '"library"."genre"'
         verbose_name = _('genre')
         verbose_name_plural = _('genres')
 
@@ -102,7 +102,7 @@ class BookGenre(UUIDMixin, CreatedMixin):
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE, blank=True, null=True)
 
     class Meta:
-        db_table = 'book_genre'
+        db_table = '"library"."book_genre"'
         unique_together = (('book', 'genre'),)
 
 
