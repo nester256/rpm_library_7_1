@@ -18,6 +18,6 @@ urlpatterns = [
     path('genre/', views.genre_view, name='genre'),
     path('author/', views.author_view, name='author'),
     # REST
-    path('rest/', include(router.urls)),
+    path('', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ]
