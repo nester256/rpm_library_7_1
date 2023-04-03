@@ -14,28 +14,22 @@ from .forms import WeatherForm
 
 @decorators.api_view(['GET'])
 def weather_rest(request):
-    if request.method == 'GET' and request.user and request.user.is_authenticated:
-        query = query_from_request(request)
-        location = query.get('location')
-        if not location or location not in config.LOCATIONS_COORDINATES.keys():
-            return Response(
-                'Wrong query value for <location>',
-                status=status_codes.HTTP_400_BAD_REQUEST
-            )
-        response = get_weather(location)
-        if not response or response.status_code != status_codes.HTTP_200_OK:
-            return Response(
-                'Foreign API did not respond',
-                status=status_codes.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+    query = query_from_request(request)
+    location = query.get('location')
+    if not location or location not in config.LOCATIONS_COORDINATES.keys():
         return Response(
-            response.json().get('fact'),
-            status=status_codes.HTTP_200_OK
+            'Wrong query value for <location>',
+            status=status_codes.HTTP_400_BAD_REQUEST
         )
-
+    response = get_weather(location)
+    if not response or response.status_code != status_codes.HTTP_200_OK:
+        return Response(
+            'Foreign API did not respond',
+            status=status_codes.HTTP_500_INTERNAL_SERVER_ERROR
+        )
     return Response(
-        'Weather API accepts only GET requests',
-        status=status_codes.HTTP_501_NOT_IMPLEMENTED
+        response.json().get('fact'),
+        status=status_codes.HTTP_200_OK
     )
 
 
