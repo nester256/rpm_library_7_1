@@ -10,7 +10,8 @@ router.register(r'Genre', views.GenreViewSet)
 router.register(r'Author', views.AuthorViewSet)
 
 urlpatterns = [
-    path('homepage/', views.custom_main, name='homepage'),
+    path('', views.custom_main, name='homepage'),
+    path('weather/', views.weather_page, name='weather'),
     path('genres/', views.GenreListView.as_view(), name='genres'),
     path('books/', views.BookListView.as_view(), name='books'),
     path('authors/', views.AuthorListView.as_view(), name='authors'),
@@ -18,6 +19,7 @@ urlpatterns = [
     path('genre/', views.genre_view, name='genre'),
     path('author/', views.author_view, name='author'),
     # REST
-    path('', include(router.urls)),
+    path('rest/', include(router.urls)),
+    path('rest/weather/', views.weather_rest),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ]

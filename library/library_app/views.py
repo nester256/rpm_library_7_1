@@ -2,14 +2,64 @@ from django.shortcuts import render
 from .models import Book, Genre, Author
 from django.views.generic import ListView
 from django.core.paginator import Paginator
-from rest_framework.viewsets import ModelViewSet
 from .serializers import BookSerializer, AuthorSerializer, GenreSerializer
-from rest_framework.permissions import BasePermission
 from . import config
 from rest_framework import status as status_codes
+from rest_framework import decorators, permissions, viewsets, parsers
 from rest_framework.response import Response
-from rest_framework.parsers import JSONParser
 from django.db.models import Model
+from .weather import get_weather
+from .forms import WeatherForm
+
+
+@decorators.api_view(['GET'])
+def weather_rest(request):
+    if request.method == 'GET' and request.user and request.user.is_authenticated:
+        query = query_from_request(request)
+        location = query.get('location')
+        if not location or location not in config.LOCATIONS_COORDINATES.keys():
+            return Response(
+                'Wrong query value for <location>',
+                status=status_codes.HTTP_400_BAD_REQUEST
+            )
+        response = get_weather(location)
+        if not response or response.status_code != status_codes.HTTP_200_OK:
+            return Response(
+                'Foreign API did not respond',
+                status=status_codes.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        return Response(
+            response.json().get('fact'),
+            status=status_codes.HTTP_200_OK
+        )
+
+    return Response(
+        'Weather API accepts only GET requests',
+        status=status_codes.HTTP_501_NOT_IMPLEMENTED
+    )
+
+
+def weather_page(request):
+    query = query_from_request(request)
+    print(f'weather page got query: {query}')
+    location = query.get('location')
+    if not location:
+        weather_data = {}
+    else:
+        response = get_weather(location)
+        if not response or response.status_code != status_codes.HTTP_200_OK:
+            weather_data = {}
+        else:
+            weather_data = response.json().get('fact')
+
+    return render(
+        request,
+        config.TEMPLATE_WEATHER,
+        context={
+            'form': WeatherForm(),
+            'weather_data': weather_data
+        }
+    )
 
 
 def custom_main(req):
@@ -64,7 +114,7 @@ GenreListView = catalog_view(Genre, 'genres', config.GENRES_CATALOG)
 genre_view = entity_view(Genre, 'genre', config.GENRE_ENTITY)
 
 
-class Permission(BasePermission):
+class Permission(permissions.BasePermission):
     def has_permission(self, request, _):
         if request.method in config.SAFE_METHODS:
             return bool(request.user and request.user.is_authenticated)
@@ -73,30 +123,32 @@ class Permission(BasePermission):
         return False
 
 
-def query_from_request(cls_serializer, request) -> dict:
-    query = {}
-    for param in cls_serializer.Meta.fields:
-        value = request.GET.get(param, '')
-        if value:
-            query[param] = value
-    return query
+def query_from_request(request, cls_serializer=None) -> dict:
+    if cls_serializer:
+        query = {}
+        for param in cls_serializer.Meta.fields:
+            value = request.GET.get(param, '')
+            if value:
+                query[param] = value
+        return query
+    return request.GET
 
 
 def create_viewset(cls_model: Model, serializer, order_field):
-    class CustomViewSet(ModelViewSet):
+    class CustomViewSet(viewsets.ModelViewSet):
         serializer_class = serializer
         queryset = cls_model.objects.all().order_by(order_field)
         permission_classes = [Permission]
 
         def get_queryset(self):
             objects = cls_model.objects.all()
-            query = query_from_request(serializer, self.request)
+            query = query_from_request(self.request, serializer)
             if query:
                 objects = objects.filter(**query)
             return objects.order_by(order_field)
 
         def delete(self, request):
-            query = query_from_request(serializer, request)
+            query = query_from_request(request, serializer)
             if query:
                 objects = cls_model.objects.filter(**query)
                 objects_num = len(objects)
@@ -114,7 +166,7 @@ def create_viewset(cls_model: Model, serializer, order_field):
 
         def put(self, request):
             def serialize(target):
-                content = JSONParser().parse(request)
+                content = parsers.JSONParser().parse(request)
                 if target:
                     serialized = serializer(target, data=content, partial=True)
                     status = status_codes.HTTP_200_OK
@@ -133,7 +185,7 @@ def create_viewset(cls_model: Model, serializer, order_field):
                     return status_codes.HTTP_500_INTERNAL_SERVER_ERROR, error
                 return status, body
 
-            query = query_from_request(serializer, request)
+            query = query_from_request(request, serializer)
             target_id = query.get('id', '')
             if target_id:
                 target_object = cls_model.objects.get(id=target_id)
